@@ -1,0 +1,71 @@
+<!-- public/chat.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat WebSocket Tester</title>
+  <style>
+    input, button { margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <h2>📌 Chat WebSocket Tester</h2>
+  <label>Access Token:</label><br>
+  <input id="token" size="100"><br>
+
+  <label>Appointment ID:</label><br>
+  <input id="appointmentId"><br>
+
+  <label>Receiver ID:</label><br>
+  <input id="receiverId"><br>
+
+  <label>Message:</label><br>
+  <input id="message" size="60"><br>
+
+  <button onclick="connectSocket()">👥 Connect & Join Room</button>
+  <button onclick="sendMessage()">📩 Send Message</button>
+
+  <h3>📥 Incoming Messages:</h3>
+  <ul id="messages"></ul>
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    let socket;
+
+    function connectSocket() {
+      const token = document.getElementById('token').value;
+      const appointmentId = document.getElementById('appointmentId').value;
+
+      socket = io('http://localhost:3000', {
+        auth: { token }
+      });
+
+      socket.on('connect', () => {
+        socket.emit('joinRoom', { appointmentId });
+        addMsg('✅ Connected to WebSocket');
+      });
+
+      socket.on('receiveMessage', msg => {
+        addMsg(`💬 ${msg.senderEmail}: ${msg.content}`);
+      });
+
+      socket.on('disconnect', () => {
+        addMsg('❌ Disconnected');
+      });
+    }
+
+    function sendMessage() {
+      const appointmentId = document.getElementById('appointmentId').value;
+      const receiverId = document.getElementById('receiverId').value;
+      const content = document.getElementById('message').value;
+
+      socket.emit('sendMessage', { appointmentId, receiverId, content });
+    }
+
+    function addMsg(msg) {
+      const li = document.createElement('li');
+      li.textContent = msg;
+      document.getElementById('messages').appendChild(li);
+    }
+  </script>
+</body>
+</html>
